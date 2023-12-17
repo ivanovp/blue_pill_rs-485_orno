@@ -156,22 +156,6 @@ uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
     uint16_t buffer;
     uint32_t response32;
 
-#if 0
-    error = modbus_read_uint16(a_reg_addr, &buffer);
-    if (error == 0)
-    {
-        response32 = buffer;
-        error = modbus_read_uint16(a_reg_addr, &buffer);
-    }
-    if (error == 0)
-    {
-        response32 <<= 16;
-        response32 |= buffer;
-        *a_uint32 = response32;
-    }
-
-    return error;
-#else
     delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
     error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, 2);
     if (error == 0)
@@ -181,13 +165,11 @@ uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
         buffer = ModbusMasterRS485.getResponseBuffer(1);
         response32 <<= 16;
         response32 |= buffer;
-        // Serial.printf("Response raw: 0x%08X\n", response32);
     }
     else
     {
         Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
     }
-#endif
 
     return error;
 }
