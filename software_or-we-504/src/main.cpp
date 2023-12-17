@@ -227,6 +227,10 @@ uint8_t or_we_504_read_values(powerTotalEnergy_t * a_power)
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
+        error = modbus_read_uint16(OR_WE_504_REG_APPARENT_POWER, &(a_power->apparentPower));
+    }
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
         error = modbus_read_uint16(OR_WE_504_REG_POWER_FACTOR, &reg_value);
     }
     if (error == ModbusMaster::ku8MBSuccess)
