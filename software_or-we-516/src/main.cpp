@@ -107,7 +107,7 @@ void setup()
 
     Serial.begin(115200);
     Serial.printf("\n\n\n");
-    Serial.printf("Blue Pill RS-485 bridge started\n");
+    Serial.printf("Blue Pill OR-WE-516 reader started\n");
     Serial.printf("Compiled on " __DATE__ " " __TIME__ "\n");
     /* Configure RS-485 communication */
     SerialRS485.begin(RS485_BAUD_RATE, SERIAL_8E1);
