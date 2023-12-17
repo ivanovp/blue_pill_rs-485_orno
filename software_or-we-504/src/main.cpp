@@ -59,11 +59,13 @@ typedef struct
 
 powerTotalEnergy_t power;
 
+/* Set direction pin to TX before RS-485 transmission */
 void preTransmission()
 {
     digitalWrite(RS485_DIR_PIN, HIGH);
 }
 
+/* Set direction pin to RX before RS-485 transmission */
 void postTransmission()
 {
     digitalWrite(RS485_DIR_PIN, LOW);
@@ -71,8 +73,10 @@ void postTransmission()
 
 void setup()
 {
+    /* Setup LED pin to output */
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
+    /* Setup direction pin to output */
     pinMode(RS485_DIR_PIN, OUTPUT);
     digitalWrite(RS485_DIR_PIN, HIGH);
 
@@ -80,7 +84,9 @@ void setup()
     Serial.printf("\n\n\n");
     Serial.printf("Blue Pill OR-WE-504 reader started\n");
     Serial.printf("Compiled on " __DATE__ " " __TIME__ "\n");
+    /* Configure RS-485 communication */
     SerialRS485.begin(RS485_BAUD_RATE, SERIAL_8E1);
+    /* Set ModBus protocol over RS-485 */
     ModbusMasterRS485.begin(MODBUS_SLAVE_ADDRESS, SerialRS485);
     ModbusMasterRS485.preTransmission(preTransmission);
     ModbusMasterRS485.postTransmission(postTransmission);
@@ -88,6 +94,7 @@ void setup()
     delay(500);
 }
 
+/* Convert modbus error code to human readable string */
 const char * modbusErrorStr(uint8_t error)
 {
     const char * errorStr = "unknown error";
@@ -130,6 +137,13 @@ const char * modbusErrorStr(uint8_t error)
     return errorStr;
 }
 
+/**
+ * @brief Read uint16 register via ModBus.
+ *
+ * @param a_reg_addr Address of register to read.
+ * @param a_uint16 Pointer to 16-bit variable to fill.
+ * @return uint8_t Modbus error code. 0 if success.
+ */
 uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
 {
     uint8_t error;
@@ -150,6 +164,13 @@ uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
     return error;
 }
 
+/**
+ * @brief Read uint32 register via ModBus.
+ *
+ * @param a_reg_addr Address of register to read.
+ * @param a_uint32 Pointer to 32-bit variable to fill.
+ * @return uint8_t Modbus error code. 0 if success.
+ */
 uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
 {
     uint8_t error;
@@ -174,6 +195,9 @@ uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
     return error;
 }
 
+/**
+ * @brief Test OR-WE-504 by reading baud rate register and check its value.
+ */
 void or_we_504_test()
 {
     uint8_t error;
@@ -200,6 +224,12 @@ void or_we_504_test()
     }
 }
 
+/**
+ * @brief Read registers from OR-WE-504.
+ *
+ * @param a_power Pointer of structure to fill.
+ * @return uint8_t  Modbus error code. 0 if success.
+ */
 uint8_t or_we_504_read_values(powerTotalEnergy_t * a_power)
 {
     uint8_t error = 0;
