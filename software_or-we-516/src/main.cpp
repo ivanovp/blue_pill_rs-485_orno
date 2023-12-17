@@ -174,7 +174,7 @@ uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
     uint8_t error;
     uint16_t buffer;
     error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, 1);
-    if (error == 0)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
         *a_uint16 = buffer;
@@ -201,7 +201,7 @@ uint8_t modbus_read_float(uint16_t a_reg_addr, float * a_float)
     uint32_t response32;
     float * response = reinterpret_cast<float*>(&response32);
     error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, 2);
-    if (error == 0)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
         response32 = buffer;
@@ -234,7 +234,7 @@ uint8_t modbus_read_float_struct(uint16_t a_first_reg_addr, float * a_float_stru
     uint16_t i;
     uint8_t retry_cnt;
 
-    for (i = 0; i < a_reg_count && !error; i++)
+    for (i = 0; i < a_reg_count && error == ModbusMaster::ku8MBSuccess; i++)
     {
         retry_cnt = 3;
         do
@@ -256,7 +256,7 @@ void or_we_516_test()
 
     Serial.printf("Trying to read baud rate register from OR-WE-516\n");
     error = ModbusMasterRS485.readHoldingRegisters(OR_WE_516_REG_BAUD_RATE, 1);
-    if (error == 0)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
         if (buffer == RS485_BAUD_RATE)
@@ -289,37 +289,37 @@ void print_misc()
     uint16_t unknown;
 
     error = modbus_read_float(OR_WE_516_REG_SOFTWARE_VERSION, &software_version);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Software version: %.2f\n", software_version);
     }
     error = modbus_read_float(OR_WE_516_REG_HARDWARE_VERSION, &hardware_version);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Hardware version: %.2f\n", hardware_version);
     }
     error = modbus_read_uint16(OR_WE_516_REG_CT_RATE, &ct_rate);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("CT rate: %i\n", ct_rate);
     }
     error = modbus_read_float(OR_WE_516_REG_S0_OUTPUT_RATE, &s0_output_rate);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("S0 output rate: %.2f\n", s0_output_rate);
     }
     error = modbus_read_uint16(OR_WE_516_REG_A3, &a3);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("A3: %i\n", a3);
     }
     error = modbus_read_uint16(OR_WE_516_REG_UNKNOWN, &unknown);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Unknown: %i\n", unknown);
     }
     error = modbus_read_uint16(OR_WE_516_REG_CYCLE_TIME, &cycle_time);
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Cycle time: %i\n", cycle_time);
     }
@@ -342,7 +342,7 @@ void print_power()
 
     Serial.printf("Time: %i ms\n", stop_timestamp - start_timestamp);
 
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Frequency: %.2f Hz\n", power.freq_Hz);
         Serial.printf("L1 voltage: %.2f V\n", power.L1_V);
@@ -386,7 +386,7 @@ void print_total_energy()
 
     Serial.printf("Time: %i ms\n", stop_timestamp - start_timestamp);
 
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Total active energy: %.2f kWh\n", totalEnergy.totalActiveEnergy);
         Serial.printf("L1 active energy: %.2f kWh\n", totalEnergy.L1TotalActiveEnergy);

@@ -151,7 +151,7 @@ uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
 
     delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
     error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, 1);
-    if (error == 0)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
         *a_uint16 = buffer;
@@ -179,7 +179,7 @@ uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
 
     delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
     error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, 2);
-    if (error == 0)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
         response32 = buffer;
@@ -206,7 +206,7 @@ void or_we_504_test()
     Serial.printf("Trying to read baud rate register from OR-WE-504\n");
     delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
     error = ModbusMasterRS485.readHoldingRegisters(OR_WE_504_REG_BAUD_RATE, 1);
-    if (error == 0)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
         if (buffer == OR_WE_504_REG_BAUD_RATE_REG_CONTENT)
@@ -287,7 +287,7 @@ void print_power()
 
     Serial.printf("Time: %i ms\n", stop_timestamp - start_timestamp);
 
-    if (!error)
+    if (error == ModbusMaster::ku8MBSuccess)
     {
         Serial.printf("Voltage: %.1f V\n", power.voltage_V);
         Serial.printf("Current: %.1f A\n", power.current_A);
