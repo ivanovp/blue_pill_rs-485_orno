@@ -58,6 +58,7 @@ typedef struct
 } powerTotalEnergy_t;
 
 powerTotalEnergy_t power;
+uint16_t modbusRegisters[16];
 
 /* Set direction pin to TX before RS-485 transmission */
 void preTransmission()
@@ -138,6 +139,34 @@ const char * modbusErrorStr(uint8_t error)
 }
 
 /**
+ * @brief Read multiple registers via ModBus.
+ *
+ * @return uint8_t Modbus error code. 0 if success.
+ */
+uint8_t modbus_read_registers(uint16_t a_reg_addr, uint16_t a_reg_count, uint16_t * a_uint16)
+{
+    uint8_t error;
+    uint16_t i;
+
+    delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
+    error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, a_reg_count);
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
+        for (i = 0u; i < a_reg_count; i++)
+        {
+            a_uint16[i] = ModbusMasterRS485.getResponseBuffer(i);
+        }
+    }
+    else
+    {
+        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+    }
+
+    return error;
+}
+
+
+/**
  * @brief Read uint16 register via ModBus.
  *
  * @param a_reg_addr Address of register to read.
@@ -146,7 +175,8 @@ const char * modbusErrorStr(uint8_t error)
  */
 uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
 {
-    uint8_t error;
+    uint8_t error = ModbusMaster::ku8MBSuccess;
+#if 0
     uint16_t buffer;
 
     delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
@@ -160,6 +190,16 @@ uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
     {
         Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
     }
+#else
+    if (a_reg_addr < sizeof(modbusRegisters) / sizeof(modbusRegisters[0]))
+    {
+        *a_uint16 = modbusRegisters[a_reg_addr];
+    }
+    else
+    {
+        error = ModbusMaster::ku8MBInvalidFunction;
+    }
+#endif
 
     return error;
 }
@@ -174,9 +214,10 @@ uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
 uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
 {
     uint8_t error;
-    uint16_t buffer;
     uint32_t response32;
+    uint16_t buffer;
 
+#if 0
     delay(OR_WE_504_READ_DELAY_MS); /* Give some time for the device */
     error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, 2);
     if (error == ModbusMaster::ku8MBSuccess)
@@ -191,6 +232,20 @@ uint8_t modbus_read_uint32(uint16_t a_reg_addr, uint32_t * a_uint32)
     {
         Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
     }
+#else
+    error = modbus_read_uint16(a_reg_addr, &buffer);
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
+        response32 = buffer;
+        error = modbus_read_uint16(a_reg_addr + 1, &buffer);
+    }
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
+        response32 <<= 16;
+        response32 |= buffer;
+        *a_uint32 = response32;
+    }
+#endif
 
     return error;
 }
@@ -305,7 +360,22 @@ void loop()
 {
     Serial.printf("\n");
     Serial.printf("---------------------------------------------------------\n");
-    // or_we_504_test();
-    print_power();
+    /* Read all registers at once */
+    uint32_t start_timestamp = millis();
+    uint8_t error = modbus_read_registers(0,
+                                  sizeof(modbusRegisters) / sizeof(modbusRegisters[0]),
+                                  modbusRegisters);
+    uint32_t stop_timestamp = millis();
+
+    Serial.printf("Time: %i ms\n", stop_timestamp - start_timestamp);
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
+        // or_we_504_test();
+        print_power();
+    }
+    else
+    {
+        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+    }
     delay(5000);
 }
