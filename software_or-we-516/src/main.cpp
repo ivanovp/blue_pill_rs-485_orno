@@ -7,6 +7,7 @@
 #define RS485_DIR_PIN           PA5
 #define MODBUS_SLAVE_ADDRESS    1   /* Meter ID of OR-WE-516 */
 
+/* DO NOT CHANGE THE VALUE OF FOLLOWING MACROS */
 #define OR_WE_516_REG_METER_ID          0x0002
 #define OR_WE_516_REG_BAUD_RATE         0x0003
 #define OR_WE_516_REG_SOFTWARE_VERSION  0x0004
@@ -83,11 +84,13 @@ typedef struct
 power_t power;
 totalEnergy_t totalEnergy;
 
+/* Set direction pin to TX before RS-485 transmission */
 void preTransmission()
 {
     digitalWrite(RS485_DIR_PIN, HIGH);
 }
 
+/* Set direction pin to RX before RS-485 transmission */
 void postTransmission()
 {
     digitalWrite(RS485_DIR_PIN, LOW);
@@ -95,8 +98,10 @@ void postTransmission()
 
 void setup()
 {
+    /* Setup LED pin to output */
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
+    /* Setup direction pin to output */
     pinMode(RS485_DIR_PIN, OUTPUT);
     digitalWrite(RS485_DIR_PIN, HIGH);
 
@@ -104,7 +109,9 @@ void setup()
     Serial.printf("\n\n\n");
     Serial.printf("Blue Pill RS-485 bridge started\n");
     Serial.printf("Compiled on " __DATE__ " " __TIME__ "\n");
+    /* Configure RS-485 communication */
     SerialRS485.begin(RS485_BAUD_RATE, SERIAL_8E1);
+    /* Set ModBus protocol over RS-485 */
     ModbusMasterRS485.begin(MODBUS_SLAVE_ADDRESS, SerialRS485);
     ModbusMasterRS485.preTransmission(preTransmission);
     ModbusMasterRS485.postTransmission(postTransmission);
@@ -112,6 +119,7 @@ void setup()
     delay(500);
 }
 
+/* Convert modbus error code to human readable string */
 const char * modbusErrorStr(uint8_t error)
 {
     const char * errorStr = "unknown error";
@@ -154,6 +162,13 @@ const char * modbusErrorStr(uint8_t error)
     return errorStr;
 }
 
+/**
+ * @brief Read uint16 register via ModBus.
+ *
+ * @param a_reg_addr Address of register to read.
+ * @param a_uint16 Pointer to 16-bit variable to fill.
+ * @return uint8_t Modbus error code. 0 if success.
+ */
 uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
 {
     uint8_t error;
@@ -172,7 +187,13 @@ uint8_t modbus_read_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
     return error;
 }
 
-
+/**
+ * @brief Read float register via ModBus.
+ *
+ * @param a_reg_addr Address of register to read.
+ * @param a_float Pointer to float variable to fill.
+ * @return uint8_t Modbus error code. 0 if success.
+ */
 uint8_t modbus_read_float(uint16_t a_reg_addr, float * a_float)
 {
     uint8_t error;
@@ -199,6 +220,14 @@ uint8_t modbus_read_float(uint16_t a_reg_addr, float * a_float)
     return error;
 }
 
+/**
+ * @brief Fill structure or array of float values.
+ *
+ * @param a_first_reg_addr Address of first register to read.
+ * @param a_float_struct Pointer to array/structure of float values.
+ * @param a_reg_count Number of registers to read.
+ * @return uint8_t Modbus error code. 0 if success.
+ */
 uint8_t modbus_read_float_struct(uint16_t a_first_reg_addr, float * a_float_struct, uint16_t a_reg_count)
 {
     uint8_t error = 0;
@@ -217,13 +246,16 @@ uint8_t modbus_read_float_struct(uint16_t a_first_reg_addr, float * a_float_stru
     return error;
 }
 
+/**
+ * @brief Test OR-WE-516 by reading baud rate register and check its value.
+ */
 void or_we_516_test()
 {
     uint8_t error;
     uint16_t buffer;
 
     Serial.printf("Trying to read baud rate register from OR-WE-516\n");
-    error = ModbusMasterRS485.readHoldingRegisters(3, 1);
+    error = ModbusMasterRS485.readHoldingRegisters(OR_WE_516_REG_BAUD_RATE, 1);
     if (error == 0)
     {
         buffer = ModbusMasterRS485.getResponseBuffer(0);
@@ -242,6 +274,9 @@ void or_we_516_test()
     }
 }
 
+/**
+ * @brief Retrieve and print miscellaneous values from OR-WE-516.
+ */
 void print_misc()
 {
     uint8_t error;
@@ -291,6 +326,9 @@ void print_misc()
     Serial.printf("\n");
 }
 
+/**
+ * @brief Retrieve actual values of voltage, current, power and print.
+ */
 void print_power()
 {
     uint8_t error;
@@ -317,14 +355,14 @@ void print_power()
         Serial.printf("L1 active power: %.2f kW\n", power.L1ActivePower);
         Serial.printf("L2 active power: %.2f kW\n", power.L2ActivePower);
         Serial.printf("L3 active power: %.2f kW\n", power.L3ActivePower);
-        Serial.printf("Total reactive power: %.2f kW\n", power.totalReactivePower);
-        Serial.printf("L1 reactive power: %.2f kW\n", power.L1ReactivePower);
-        Serial.printf("L2 reactive power: %.2f kW\n", power.L2ReactivePower);
-        Serial.printf("L3 reactive power: %.2f kW\n", power.L3ReactivePower);
-        Serial.printf("Total apparent power: %.2f kW\n", power.totalApparentPower);
-        Serial.printf("L1 apparent power: %.2f kW\n", power.L1ApparentPower);
-        Serial.printf("L2 apparent power: %.2f kW\n", power.L2ApparentPower);
-        Serial.printf("L3 apparent power: %.2f kW\n", power.L3ApparentPower);
+        Serial.printf("Total reactive power: %.2f kvar\n", power.totalReactivePower);
+        Serial.printf("L1 reactive power: %.2f kvar\n", power.L1ReactivePower);
+        Serial.printf("L2 reactive power: %.2f kvar\n", power.L2ReactivePower);
+        Serial.printf("L3 reactive power: %.2f kvar\n", power.L3ReactivePower);
+        Serial.printf("Total apparent power: %.2f kVA\n", power.totalApparentPower);
+        Serial.printf("L1 apparent power: %.2f kVA\n", power.L1ApparentPower);
+        Serial.printf("L2 apparent power: %.2f kVA\n", power.L2ApparentPower);
+        Serial.printf("L3 apparent power: %.2f kVA\n", power.L3ApparentPower);
         Serial.printf("Total power factor: %.2f\n", power.totalPowerFactor);
         Serial.printf("L1 power factor: %.2f\n", power.L1PowerFactor);
         Serial.printf("L2 power factor: %.2f\n", power.L2PowerFactor);
@@ -332,6 +370,9 @@ void print_power()
     }
 }
 
+/**
+ * @brief Retrieve energy values and print.
+ */
 void print_total_energy()
 {
     uint8_t error;
@@ -347,18 +388,18 @@ void print_total_energy()
 
     if (!error)
     {
-        Serial.printf("Total active energy: %.2f kvarh\n", totalEnergy.totalActiveEnergy);
-        Serial.printf("L1 active energy: %.2f kvarh\n", totalEnergy.L1TotalActiveEnergy);
-        Serial.printf("L2 active energy: %.2f kvarh\n", totalEnergy.L2TotalActiveEnergy);
-        Serial.printf("L3 active energy: %.2f kvarh\n", totalEnergy.L3TotalActiveEnergy);
-        Serial.printf("Total forward active energy: %.2f kvarh\n", totalEnergy.totalForwardActiveEnergy);
-        Serial.printf("L1 forward active energy: %.2f kvarh\n", totalEnergy.L1ForwardActiveEnergy);
-        Serial.printf("L2 forward active energy: %.2f kvarh\n", totalEnergy.L2ForwardActiveEnergy);
-        Serial.printf("L3 forward active energy: %.2f kvarh\n", totalEnergy.L3ForwardActiveEnergy);
-        Serial.printf("Total reverse active energy: %.2f kvarh\n", totalEnergy.totalReverseActiveEnergy);
-        Serial.printf("L1 reverse active energy: %.2f kvarh\n", totalEnergy.L1ReverseActiveEnergy);
-        Serial.printf("L2 reverse active energy: %.2f kvarh\n", totalEnergy.L2ReverseActiveEnergy);
-        Serial.printf("L3 reverse active energy: %.2f kvarh\n", totalEnergy.L3ReverseActiveEnergy);
+        Serial.printf("Total active energy: %.2f kWh\n", totalEnergy.totalActiveEnergy);
+        Serial.printf("L1 active energy: %.2f kWh\n", totalEnergy.L1TotalActiveEnergy);
+        Serial.printf("L2 active energy: %.2f kWh\n", totalEnergy.L2TotalActiveEnergy);
+        Serial.printf("L3 active energy: %.2f kWh\n", totalEnergy.L3TotalActiveEnergy);
+        Serial.printf("Total forward active energy: %.2f kWh\n", totalEnergy.totalForwardActiveEnergy);
+        Serial.printf("L1 forward active energy: %.2f kWh\n", totalEnergy.L1ForwardActiveEnergy);
+        Serial.printf("L2 forward active energy: %.2f kWh\n", totalEnergy.L2ForwardActiveEnergy);
+        Serial.printf("L3 forward active energy: %.2f kWh\n", totalEnergy.L3ForwardActiveEnergy);
+        Serial.printf("Total reverse active energy: %.2f kWh\n", totalEnergy.totalReverseActiveEnergy);
+        Serial.printf("L1 reverse active energy: %.2f kWh\n", totalEnergy.L1ReverseActiveEnergy);
+        Serial.printf("L2 reverse active energy: %.2f kWh\n", totalEnergy.L2ReverseActiveEnergy);
+        Serial.printf("L3 reverse active energy: %.2f kWh\n", totalEnergy.L3ReverseActiveEnergy);
         Serial.printf("Total reactive energy: %.2f kvarh\n", totalEnergy.totalReactiveEnergy);
         Serial.printf("L1 reactive energy: %.2f kvarh\n", totalEnergy.L1ReactiveEnergy);
         Serial.printf("L2 reactive energy: %.2f kvarh\n", totalEnergy.L2ReactiveEnergy);
