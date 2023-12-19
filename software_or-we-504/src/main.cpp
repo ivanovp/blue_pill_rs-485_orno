@@ -49,12 +49,12 @@ typedef struct
     float voltage_V;
     float current_A;
     float freq_Hz;
-    uint16_t activePower;
-    uint16_t reactivePower;
-    uint16_t apparentPower;
+    uint16_t activePower_W;
+    uint16_t reactivePower_var;
+    uint16_t apparentPower_VA;
     float powerFactor;
-    uint32_t activeEnergy;
-    uint32_t reactiveEnergy;
+    uint32_t activeEnergy_Wh;
+    uint32_t reactiveEnergy_varh;
 } powerTotalEnergy_t;
 
 powerTotalEnergy_t power;
@@ -308,7 +308,7 @@ void or_we_504_test()
 }
 
 /**
- * @brief Read registers from OR-WE-504.
+ * @brief Process registers from modbusRegisters array.
  *
  * @param a_power Pointer of structure to fill.
  * @return uint8_t  Modbus error code. 0 if success.
@@ -332,15 +332,15 @@ uint8_t or_we_504_get_values(powerTotalEnergy_t * a_power)
     if (error == ModbusMaster::ku8MBSuccess)
     {
         a_power->freq_Hz = reg_value * 0.1f;
-        error = modbus_get_uint16(OR_WE_504_REG_ACTIVE_POWER, &(a_power->activePower));
+        error = modbus_get_uint16(OR_WE_504_REG_ACTIVE_POWER, &(a_power->activePower_W));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
-        error = modbus_get_uint16(OR_WE_504_REG_REACTIVE_POWER, &(a_power->reactivePower));
+        error = modbus_get_uint16(OR_WE_504_REG_REACTIVE_POWER, &(a_power->reactivePower_var));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
-        error = modbus_get_uint16(OR_WE_504_REG_APPARENT_POWER, &(a_power->apparentPower));
+        error = modbus_get_uint16(OR_WE_504_REG_APPARENT_POWER, &(a_power->apparentPower_VA));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
@@ -349,11 +349,11 @@ uint8_t or_we_504_get_values(powerTotalEnergy_t * a_power)
     if (error == ModbusMaster::ku8MBSuccess)
     {
         a_power->powerFactor = reg_value * 0.001f;
-        error = modbus_get_uint32(OR_WE_504_REG_ACTIVE_ENERGY, &(a_power->activeEnergy));
+        error = modbus_get_uint32(OR_WE_504_REG_ACTIVE_ENERGY, &(a_power->activeEnergy_Wh));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
-        error = modbus_get_uint32(OR_WE_504_REG_REACTIVE_ENERGY, &(a_power->reactiveEnergy));
+        error = modbus_get_uint32(OR_WE_504_REG_REACTIVE_ENERGY, &(a_power->reactiveEnergy_varh));
     }
 
     return error;
@@ -361,7 +361,7 @@ uint8_t or_we_504_get_values(powerTotalEnergy_t * a_power)
 
 
 /**
- * @brief Process registers of modbusRegisters array.
+ * @brief Read registers from OR-WE-504 and process them.
  *
  * @param a_power Pointer of structure to fill.
  * @return uint8_t  Modbus error code. 0 if success.
@@ -385,15 +385,15 @@ uint8_t or_we_504_read_values(powerTotalEnergy_t * a_power)
     if (error == ModbusMaster::ku8MBSuccess)
     {
         a_power->freq_Hz = reg_value * 0.1f;
-        error = modbus_read_uint16(OR_WE_504_REG_ACTIVE_POWER, &(a_power->activePower));
+        error = modbus_read_uint16(OR_WE_504_REG_ACTIVE_POWER, &(a_power->activePower_W));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
-        error = modbus_read_uint16(OR_WE_504_REG_REACTIVE_POWER, &(a_power->reactivePower));
+        error = modbus_read_uint16(OR_WE_504_REG_REACTIVE_POWER, &(a_power->reactivePower_var));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
-        error = modbus_read_uint16(OR_WE_504_REG_APPARENT_POWER, &(a_power->apparentPower));
+        error = modbus_read_uint16(OR_WE_504_REG_APPARENT_POWER, &(a_power->apparentPower_VA));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
@@ -402,18 +402,18 @@ uint8_t or_we_504_read_values(powerTotalEnergy_t * a_power)
     if (error == ModbusMaster::ku8MBSuccess)
     {
         a_power->powerFactor = reg_value * 0.001f;
-        error = modbus_read_uint32(OR_WE_504_REG_ACTIVE_ENERGY, &(a_power->activeEnergy));
+        error = modbus_read_uint32(OR_WE_504_REG_ACTIVE_ENERGY, &(a_power->activeEnergy_Wh));
     }
     if (error == ModbusMaster::ku8MBSuccess)
     {
-        error = modbus_read_uint32(OR_WE_504_REG_REACTIVE_ENERGY, &(a_power->reactiveEnergy));
+        error = modbus_read_uint32(OR_WE_504_REG_REACTIVE_ENERGY, &(a_power->reactiveEnergy_varh));
     }
 
     return error;
 }
 
 /**
- * @brief Print memebrs of powerTotalEnergy structure to serial port.
+ * @brief Print members of powerTotalEnergy structure to serial port.
  *
  * @param a_power Pointer of structure to print.
  */
@@ -422,12 +422,12 @@ void print_power(powerTotalEnergy_t * a_power)
     Serial.printf("Voltage: %.1f V\n", a_power->voltage_V);
     Serial.printf("Current: %.1f A\n", a_power->current_A);
     Serial.printf("Frequency: %.1f Hz\n", a_power->freq_Hz);
-    Serial.printf("Active power: %d W\n", (unsigned int)a_power->activePower);
-    Serial.printf("Reactive power: %d var\n", (unsigned int)a_power->reactivePower);
+    Serial.printf("Active power: %d W\n", (unsigned int)a_power->activePower_W);
+    Serial.printf("Reactive power: %d var\n", (unsigned int)a_power->reactivePower_var);
     Serial.printf("Power factor: %.3f\n", a_power->powerFactor);
-    Serial.printf("Apparent power: %d VA\n", (unsigned int)a_power->apparentPower);
-    Serial.printf("Active energy: %d Wh\n", a_power->activeEnergy);
-    Serial.printf("Reactive energy: %d varh\n", a_power->reactiveEnergy);
+    Serial.printf("Apparent power: %d VA\n", (unsigned int)a_power->apparentPower_VA);
+    Serial.printf("Active energy: %d Wh\n", a_power->activeEnergy_Wh);
+    Serial.printf("Reactive energy: %d varh\n", a_power->reactiveEnergy_varh);
 }
 
 void loop()
@@ -468,26 +468,6 @@ void loop()
     if (error == ModbusMaster::ku8MBSuccess)
     {
         print_power(&power);
-    }
-    else
-    {
-        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
-    }
-#elif 0
-    uint32_t reg32;
-    uint8_t error = modbus_read_uint32(OR_WE_504_REG_ACTIVE_ENERGY, &reg32);
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        Serial.printf("Active energy: %d Wh\n", reg32);
-    }
-    else
-    {
-        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
-    }
-    error = modbus_read_uint32(OR_WE_504_REG_REACTIVE_ENERGY, &reg32);
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        Serial.printf("Reactive energy: %d varh\n", reg32);
     }
     else
     {
