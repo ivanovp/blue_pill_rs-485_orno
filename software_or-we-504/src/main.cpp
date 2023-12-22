@@ -1,3 +1,12 @@
+/**
+ * @file        main.cpp
+ * @brief       Entry point and main program to read data from OR-WE-504 meter
+ * @author      Copyright (C) Peter Ivanov, 2023
+ *
+ * Created      2023-12-17 11:30:53
+ * Last modify: 2023-12-22 20:37:22 ivanovp {Time-stamp}
+ * Licence:     GPL
+ */
 #include <Arduino.h>
 #include "ModbusMaster.h"
 
@@ -21,6 +30,8 @@
 #define OR_WE_504_REG_REACTIVE_ENERGY   0x0009
 #define OR_WE_504_REG_BAUD_RATE         0x000E
 #define OR_WE_504_REG_METER_ID          0x000F
+
+#define OR_WE_504_REGISTER_NUMBER       16  /* Number of registers in the device */
 
 #define OR_WE_504_REG_BAUD_RATE_1200    1
 #define OR_WE_504_REG_BAUD_RATE_2400    2
@@ -58,7 +69,7 @@ typedef struct
 } powerTotalEnergy_t;
 
 powerTotalEnergy_t power;
-uint16_t modbusRegisters[16];
+uint16_t modbusRegisters[OR_WE_504_REGISTER_NUMBER];
 
 /* Set direction pin to TX before RS-485 transmission */
 void preTransmission()
@@ -66,7 +77,7 @@ void preTransmission()
     digitalWrite(RS485_DIR_PIN, HIGH);
 }
 
-/* Set direction pin to RX before RS-485 transmission */
+/* Set direction pin to RX after RS-485 transmission */
 void postTransmission()
 {
     digitalWrite(RS485_DIR_PIN, LOW);
@@ -458,7 +469,7 @@ void loop()
     {
         Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
     }
-#elif 0
+#else
     uint32_t start_timestamp = millis();
     uint8_t error = or_we_504_read_values(&power);
     uint32_t stop_timestamp = millis();

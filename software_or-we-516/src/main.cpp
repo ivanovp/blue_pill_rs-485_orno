@@ -1,3 +1,12 @@
+/**
+ * @file        main.cpp
+ * @brief       Entry point and main program to read data from OR-WE-516 meter
+ * @author      Copyright (C) Peter Ivanov, 2023
+ *
+ * Created      2023-12-16 11:30:53
+ * Last modify: 2023-12-22 20:36:42 ivanovp {Time-stamp}
+ * Licence:     GPL
+ */
 #include <Arduino.h>
 #include "ModbusMaster.h"
 
@@ -90,7 +99,7 @@ void preTransmission()
     digitalWrite(RS485_DIR_PIN, HIGH);
 }
 
-/* Set direction pin to RX before RS-485 transmission */
+/* Set direction pin to RX after RS-485 transmission */
 void postTransmission()
 {
     digitalWrite(RS485_DIR_PIN, LOW);
