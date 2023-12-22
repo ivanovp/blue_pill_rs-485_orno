@@ -79,6 +79,8 @@ typedef struct
 powerTotalEnergy_t power;
 uint16_t modbusRegisters[OR_WE_525_REGISTER_NUMBER];
 
+uint8_t or_we_525_auto_detect_baud_rate();
+
 /* Set direction pin to TX before RS-485 transmission */
 void preTransmission()
 {
@@ -110,6 +112,7 @@ void setup()
     ModbusMasterRS485.begin(MODBUS_SLAVE_ADDRESS, SerialRS485);
     ModbusMasterRS485.preTransmission(preTransmission);
     ModbusMasterRS485.postTransmission(postTransmission);
+    // or_we_525_auto_detect_baud_rate();
     Serial.printf("Initialized\n");
     delay(500);
 }
@@ -323,7 +326,7 @@ uint8_t modbus_get_int32(uint16_t a_reg_addr, int32_t * a_int32)
 /**
  * @brief Test OR-WE-525 by reading baud rate register and check its value.
  */
-void or_we_525_test()
+uint8_t or_we_525_test()
 {
     uint8_t error;
     uint16_t buffer;
@@ -340,12 +343,121 @@ void or_we_525_test()
         else
         {
             Serial.printf("Test failed! Buffer: %i\n", buffer);
+            error = ModbusMaster::ku8MBSlaveDeviceFailure;
         }
     }
     else
     {
         Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
     }
+
+    return error;
+}
+
+/**
+ * @brief Detect baud rate of OR-WE-525.
+ */
+uint8_t or_we_525_auto_detect_baud_rate()
+{
+    uint8_t error;
+    uint16_t buffer;
+
+    Serial.printf("Auto detecting baud rate of OR-WE-525\n");
+
+    Serial.printf("Trying baud rate 9600...\n");
+    SerialRS485.begin(9600, SERIAL_8N1);
+    error = ModbusMasterRS485.readHoldingRegisters(OR_WE_525_REG_BAUD_RATE, 1);
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
+        buffer = ModbusMasterRS485.getResponseBuffer(0);
+        if (buffer == OR_WE_525_REG_BAUD_RATE_9600)
+        {
+            Serial.printf("Baud rate is 9600! Autodetect succeeded!\n", buffer);
+        }
+    }
+    else
+    {
+        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+    }
+    if (error != ModbusMaster::ku8MBSuccess)
+    {
+        Serial.printf("Trying baud rate 19200...\n");
+        SerialRS485.begin(19200, SERIAL_8N1);
+        error = ModbusMasterRS485.readHoldingRegisters(OR_WE_525_REG_BAUD_RATE, 1);
+        if (error == ModbusMaster::ku8MBSuccess)
+        {
+            buffer = ModbusMasterRS485.getResponseBuffer(0);
+            if (buffer == OR_WE_525_REG_BAUD_RATE_19200)
+            {
+                Serial.printf("Baud rate is 19200! Autodetect succeeded!\n", buffer);
+            }
+        }
+        else
+        {
+            Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+        }
+    }
+    if (error != ModbusMaster::ku8MBSuccess)
+    {
+        Serial.printf("Trying baud rate 38400...\n");
+        SerialRS485.begin(38400, SERIAL_8N1);
+        error = ModbusMasterRS485.readHoldingRegisters(OR_WE_525_REG_BAUD_RATE, 1);
+        if (error == ModbusMaster::ku8MBSuccess)
+        {
+            buffer = ModbusMasterRS485.getResponseBuffer(0);
+            if (buffer == OR_WE_525_REG_BAUD_RATE_38400)
+            {
+                Serial.printf("Baud rate is 38400! Autodetect succeeded!\n", buffer);
+            }
+        }
+        else
+        {
+            Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+        }
+    }
+    if (error != ModbusMaster::ku8MBSuccess)
+    {
+        Serial.printf("Trying baud rate 115200...\n");
+        SerialRS485.begin(115200, SERIAL_8N1);
+        error = ModbusMasterRS485.readHoldingRegisters(OR_WE_525_REG_BAUD_RATE, 1);
+        if (error == ModbusMaster::ku8MBSuccess)
+        {
+            buffer = ModbusMasterRS485.getResponseBuffer(0);
+            if (buffer == OR_WE_525_REG_BAUD_RATE_115200)
+            {
+                Serial.printf("Baud rate is 115200! Autodetect succeeded!\n", buffer);
+            }
+        }
+        else
+        {
+            Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+        }
+    }
+
+    return error;
+}
+
+
+/**
+ * @brief Set baud rate of OR-WE-525.
+ */
+uint8_t or_we_525_set_baud_rate(uint16_t a_baud_rate)
+{
+    uint8_t error;
+    uint16_t buffer;
+
+    Serial.printf("Setting baud rate...\n");
+    error = ModbusMasterRS485.writeSingleRegister(OR_WE_525_REG_BAUD_RATE, a_baud_rate);
+    if (error == ModbusMaster::ku8MBSuccess)
+    {
+        Serial.printf("Done.\n");
+    }
+    else
+    {
+        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
+    }
+
+    return error;
 }
 
 
@@ -510,6 +622,9 @@ void loop()
 {
     Serial.printf("\n");
     Serial.printf("---------------------------------------------------------\n");
+    // or_we_525_set_baud_rate(OR_WE_525_REG_BAUD_RATE_115200);
+    // or_we_525_set_baud_rate(OR_WE_525_REG_BAUD_RATE_9600);
+    // or_we_525_auto_detect_baud_rate();
     // or_we_525_test();
 #if 0
     /* Read all registers at once */
