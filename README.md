@@ -1,12 +1,12 @@
 # blue_pill_rs-485_orno
 This repository contains demo code for YouTube videos.
 In these videos I show how to get voltage, current, power, etc. measurement values of Orno energy meters.
-In the measurement setup Blue Pill (STM32F103) development board and Arduino framework are used.
+Blue Pill (STM32F103) development board, UNI-T current clamp and an old 60W light bulb are used in the measurement setup.
 
 Schematic:
 ![Schematic](https://github.com/ivanovp/blue_pill_rs-485_orno/blob/main/hardware/blue_pill_rs-485_bb.png?raw=true)
 
-Photos:
+Measurement setup:
 ![Measurement setup](https://github.com/ivanovp/blue_pill_rs-485_orno/blob/main/blue_pill_rs-485_orno.jpg?raw=true)
 
 Bill of Materials:
