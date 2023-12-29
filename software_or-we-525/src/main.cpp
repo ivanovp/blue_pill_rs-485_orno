@@ -13,6 +13,8 @@
 
 #define LED_PIN                 PC13
 
+/* Default baud rate: 9600 */
+/* Available baud rates: 9600, 19200, 38400, 115200 */
 #define RS485_BAUD_RATE         9600
 #define RS485_DIR_PIN           PA5
 #define MODBUS_SLAVE_ADDRESS    1   /* Meter ID of OR-WE-525 */
@@ -57,6 +59,11 @@ ModbusMaster ModbusMasterRS485;
 //                         RX    TX
 HardwareSerial SerialRS485(PA3, PA2);
 
+/**
+ * @brief Measured values from energy meter.
+ *
+ * @see or_we_525_read_values() function.
+ */
 typedef struct
 {
     float voltage_V;
