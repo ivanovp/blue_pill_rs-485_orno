@@ -7,7 +7,7 @@ Schematic:
 ![Schematic](https://github.com/ivanovp/blue_pill_rs-485_orno/blob/main/hardware/blue_pill_rs-485_bb.png?raw=true)
 
 Photos:
-![Measurement setup](https://github.com/ivanovp/blue_pill_arduino_usb_hid_keyboard/blob/main/blue_pill_rs-485_orno.jpg?raw=true)
+![Measurement setup](https://github.com/ivanovp/blue_pill_rs-485_orno/blob/main/blue_pill_rs-485_orno.jpg?raw=true)
 
 Bill of Materials:
 
@@ -25,7 +25,10 @@ ST-Link V2:
 https://www.hestore.hu/prod_10037590.html
 
 Videos (all in Hungarian language, sorry):
-![Installing Visual Studio Code, PlatformIO, debugging](https://www.youtube.com/watch?v=8F5E5lvtygk)
-![ORNO OR-WE-516 energy meter](https://www.youtube.com/watch?v=oEFw1XHzU-8)
-![ORNO OR-WE-504 energy meter](https://www.youtube.com/watch?v=qygMl6UML5U)
+
+Installing Visual Studio Code, PlatformIO, debugging: https://www.youtube.com/watch?v=8F5E5lvtygk
+
+ORNO OR-WE-516 energy meter: https://www.youtube.com/watch?v=oEFw1XHzU-8
+
+ORNO OR-WE-504 energy meter: https://www.youtube.com/watch?v=qygMl6UML5U
 
