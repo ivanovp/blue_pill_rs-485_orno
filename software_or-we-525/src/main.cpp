@@ -4,7 +4,7 @@
  * @author      Copyright (C) Peter Ivanov, 2023
  *
  * Created      2023-12-22 20:30:53
- * Last modify: 2023-12-22 21:56:16 ivanovp {Time-stamp}
+ * Last modify: 2023-12-29 08:45:59 ivanovp {Time-stamp}
  * Licence:     GPL
  */
 
@@ -26,8 +26,6 @@
 #define OR_WE_525_REG_APPARENT_POWER                0x0106
 #define OR_WE_525_REG_POWER_FACTOR                  0x010B
 
-#define OR_WE_525_FIRST_REG                         OR_WE_525_REG_VOLTAGE
-
 #define OR_WE_525_REG_TOTAL_FORWARD_ACTIVE_ENERGY   0x010E
 #define OR_WE_525_REG_TOTAL_REVERSE_ACTIVE_ENERGY   0x0118
 #define OR_WE_525_REG_TOTAL_FORWARD_REACTIVE_ENERGY 0x012C
@@ -36,8 +34,6 @@
 #define OR_WE_525_REG_METER_SERIAL_NUMBER           0x1000
 #define OR_WE_525_REG_METER_ID                      0x1003
 #define OR_WE_525_REG_BAUD_RATE                     0x100C
-
-#define OR_WE_525_REGISTER_NUMBER                   14  /* Number of registers in the device */
 
 #define OR_WE_525_REG_BAUD_RATE_9600                6
 #define OR_WE_525_REG_BAUD_RATE_19200               7
@@ -77,7 +73,6 @@ typedef struct
 } powerTotalEnergy_t;
 
 powerTotalEnergy_t power;
-uint16_t modbusRegisters[OR_WE_525_REGISTER_NUMBER];
 
 uint8_t or_we_525_auto_detect_baud_rate();
 
@@ -112,10 +107,16 @@ void setup()
     ModbusMasterRS485.begin(MODBUS_SLAVE_ADDRESS, SerialRS485);
     ModbusMasterRS485.preTransmission(preTransmission);
     ModbusMasterRS485.postTransmission(postTransmission);
+    /* Uncomment the following function to auto detect baud rate of OR-WE-525 */
+    // or_we_525_auto_detect_baud_rate();
+    /* Uncomment following lines to change baud rate */
+    // or_we_525_set_baud_rate(OR_WE_525_REG_BAUD_RATE_115200);
+    // or_we_525_set_baud_rate(OR_WE_525_REG_BAUD_RATE_9600);
     // or_we_525_auto_detect_baud_rate();
     Serial.printf("Initialized\n");
     delay(500);
 }
+
 
 /* Convert modbus error code to human readable string */
 const char * modbusErrorStr(uint8_t error)
@@ -158,32 +159,6 @@ const char * modbusErrorStr(uint8_t error)
     }
 
     return errorStr;
-}
-
-/**
- * @brief Read multiple registers via ModBus.
- *
- * @return uint8_t Modbus error code. 0 if success.
- */
-uint8_t modbus_read_registers(uint16_t a_reg_addr, uint16_t a_reg_count, uint16_t * a_uint16)
-{
-    uint8_t error;
-    uint16_t i;
-
-    error = ModbusMasterRS485.readHoldingRegisters(a_reg_addr, a_reg_count);
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        for (i = 0u; i < a_reg_count; i++)
-        {
-            a_uint16[i] = ModbusMasterRS485.getResponseBuffer(i);
-        }
-    }
-    else
-    {
-        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
-    }
-
-    return error;
 }
 
 
@@ -245,83 +220,6 @@ uint8_t modbus_read_int32(uint16_t a_reg_addr, int32_t * a_int32)
     return error;
 }
 
-/**
- * @brief Get uint16 register from modbusRegisters.
- *
- * @param a_reg_addr Address of register to read.
- * @param a_int16 Pointer to 16-bit variable to fill.
- * @return uint8_t Modbus error code. 0 if success.
- */
-uint8_t modbus_get_int16(uint16_t a_reg_addr, int16_t * a_int16)
-{
-    uint8_t error = ModbusMaster::ku8MBSuccess;
-
-    if (a_reg_addr < sizeof(modbusRegisters) / sizeof(modbusRegisters[0]))
-    {
-        *a_int16 = modbusRegisters[a_reg_addr];
-    }
-    else
-    {
-        error = ModbusMaster::ku8MBInvalidFunction;
-    }
-
-    return error;
-}
-
-
-/**
- * @brief Get uint16 register from modbusRegisters.
- *
- * @param a_reg_addr Address of register to read.
- * @param a_uint16 Pointer to 16-bit variable to fill.
- * @return uint8_t Modbus error code. 0 if success.
- */
-uint8_t modbus_get_uint16(uint16_t a_reg_addr, uint16_t * a_uint16)
-{
-    uint8_t error = ModbusMaster::ku8MBSuccess;
-
-    if (a_reg_addr < sizeof(modbusRegisters) / sizeof(modbusRegisters[0]))
-    {
-        *a_uint16 = modbusRegisters[a_reg_addr];
-    }
-    else
-    {
-        error = ModbusMaster::ku8MBInvalidFunction;
-    }
-
-    return error;
-}
-
-
-/**
- * @brief Get uint32 register from modbusRegisters.
- *
- * @param a_reg_addr Address of register to read.
- * @param a_int32 Pointer to 32-bit variable to fill.
- * @return uint8_t Modbus error code. 0 if success.
- */
-uint8_t modbus_get_int32(uint16_t a_reg_addr, int32_t * a_int32)
-{
-    uint8_t error;
-    uint32_t response32;
-    uint16_t buffer;
-
-    error = modbus_get_uint16(a_reg_addr, &buffer);
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        response32 = buffer;
-        error = modbus_get_uint16(a_reg_addr + 1, &buffer);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        response32 <<= 16;
-        response32 |= buffer;
-        *a_int32 = response32;
-    }
-
-    return error;
-}
-
 
 /**
  * @brief Test OR-WE-525 by reading baud rate register and check its value.
@@ -353,6 +251,7 @@ uint8_t or_we_525_test()
 
     return error;
 }
+
 
 /**
  * @brief Detect baud rate of OR-WE-525.
@@ -462,75 +361,6 @@ uint8_t or_we_525_set_baud_rate(uint16_t a_baud_rate)
 
 
 /**
- * @brief Process registers from modbusRegisters array.
- *
- * @param a_power Pointer of structure to fill.
- * @return uint8_t  Modbus error code. 0 if success.
- */
-uint8_t or_we_525_get_values(powerTotalEnergy_t * a_power)
-{
-    uint8_t error = 0;
-    int16_t reg16_value = 0;
-    int32_t reg32_value = 0;
-
-    error = modbus_get_int32(OR_WE_525_REG_VOLTAGE, &reg32_value);
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->voltage_V = reg32_value * 0.001f;
-        error = modbus_get_int32(OR_WE_525_REG_CURRENT, &reg32_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->current_A = reg32_value * 0.001f;
-        error = modbus_get_int16(OR_WE_525_REG_FREQUENCY, &reg16_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->freq_Hz = reg16_value * 0.1f;
-        error = modbus_get_int32(OR_WE_525_REG_ACTIVE_POWER, &(a_power->activePower_W));
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        error = modbus_get_int32(OR_WE_525_REG_REACTIVE_POWER, &(a_power->reactivePower_var));
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        error = modbus_get_int32(OR_WE_525_REG_APPARENT_POWER, &(a_power->apparentPower_VA));
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        error = modbus_get_int16(OR_WE_525_REG_POWER_FACTOR, &reg16_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->powerFactor = reg16_value * 0.001f;
-        error = modbus_get_int32(OR_WE_525_REG_TOTAL_FORWARD_ACTIVE_ENERGY, &reg32_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->totalForwardActiveEnergy_kWh = reg32_value * 0.01f;
-        error = modbus_get_int32(OR_WE_525_REG_TOTAL_REVERSE_ACTIVE_ENERGY, &reg32_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->totalReverseActiveEnergy_kWh = reg32_value * 0.01f;
-        error = modbus_get_int32(OR_WE_525_REG_TOTAL_FORWARD_REACTIVE_ENERGY, &reg32_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->totalForwardReactiveEnergy_kWh = reg32_value * 0.01f;
-        error = modbus_get_int32(OR_WE_525_REG_TOTAL_REVERSE_REACTIVE_ENERGY, &reg32_value);
-    }
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        a_power->totalReverseReactiveEnergy_kWh = reg32_value * 0.01f;
-    }
-
-    return error;
-}
-
-
-/**
  * @brief Read registers from OR-WE-525 and process them.
  *
  * @param a_power Pointer of structure to fill.
@@ -618,38 +448,13 @@ void print_power(powerTotalEnergy_t * a_power)
     Serial.printf("Total reverse reactive energy: %.2f kWh\n", a_power->totalReverseReactiveEnergy_kWh);
 }
 
+
 void loop()
 {
     Serial.printf("\n");
     Serial.printf("---------------------------------------------------------\n");
-    // or_we_525_set_baud_rate(OR_WE_525_REG_BAUD_RATE_115200);
-    // or_we_525_set_baud_rate(OR_WE_525_REG_BAUD_RATE_9600);
-    // or_we_525_auto_detect_baud_rate();
     // or_we_525_test();
-#if 0
-    /* Read all registers at once */
-    uint32_t start_timestamp = millis();
-    uint8_t error = modbus_read_registers(OR_WE_525_FIRST_REG,
-                                          sizeof(modbusRegisters) / sizeof(modbusRegisters[0]),
-                                          modbusRegisters);
-    uint32_t stop_timestamp = millis();
 
-    Serial.printf("Time: %i ms\n", stop_timestamp - start_timestamp);
-
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        error = or_we_525_get_values(&power);
-    }
-
-    if (error == ModbusMaster::ku8MBSuccess)
-    {
-        print_power(&power);
-    }
-    else
-    {
-        Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
-    }
-#else
     uint32_t start_timestamp = millis();
     uint8_t error = or_we_525_read_values(&power);
     uint32_t stop_timestamp = millis();
@@ -664,7 +469,6 @@ void loop()
     {
         Serial.printf("Modbus error: 0x%X %s\n", error, modbusErrorStr(error));
     }
-#endif
 
     delay(5000);
 }
