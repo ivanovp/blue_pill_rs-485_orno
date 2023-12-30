@@ -82,6 +82,7 @@ typedef struct
 powerTotalEnergy_t power;
 
 uint8_t or_we_525_auto_detect_baud_rate();
+uint8_t or_we_525_set_baud_rate(uint16_t a_baud_rate);
 
 /* Set direction pin to TX before RS-485 transmission */
 void preTransmission()
